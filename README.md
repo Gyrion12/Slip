@@ -1,1 +1,184 @@
-# Slip
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Slip Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+            color: #333;
+        }
+        .container {
+            width: 100%;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: white;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+        h1 {
+            text-align: center;
+        }
+        label {
+            display: block;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        input[type="text"], input[type="number"], select, input[type="file"] {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        #slipPreview {
+            margin-top: 30px;
+            text-align: center;
+        }
+        .slip {
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #fff;
+        }
+        .slip h3, .slip p {
+            margin: 5px 0;
+            font-weight: bold;
+        }
+        .btn {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .btn:hover {
+            background-color: #45a049;
+        }
+        #downloadLink {
+            margin-top: 20px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Payment Slip Generator</h1>
+    
+    <label for="name">Full Name:</label>
+    <input type="text" id="name" placeholder="Enter Full Name">
+    
+    <label for="bank">Receiver's Bank Name:</label>
+    <input type="text" id="bank" placeholder="Enter Receiver's Bank Name">
+    
+    <label for="amount">Amount:</label>
+    <input type="number" id="amount" placeholder="Enter Amount">
+    
+    <label for="currency">Choose Currency:</label>
+    <select id="currency">
+        <option value="GBP">GBP</option>
+        <option value="USD">USD</option>
+        <option value="EUR">EUR</option>
+        <option value="BTC">Bitcoin</option>
+        <option value="ETH">Ethereum</option>
+        <option value="LTC">Litecoin</option>
+        <option value="BCH">Bitcoin Cash</option>
+        <option value="XRP">XRP</option>
+    </select>
+    
+    <label for="logo">Upload Receiver's Bank Logo (Optional):</label>
+    <input type="file" id="logo" accept="image/*">
+    
+    <button class="btn" onclick="generateSlip()">Generate Slip</button>
+
+    <div id="slipPreview">
+        <div class="slip" id="paymentSlip">
+            <h3>MPB (Sender)</h3> <!-- MPB Text for Sender -->
+            <h3 id="slipName">Name: </h3>
+            <p id="slipBank">Receiver's Bank: </p>
+            <p id="slipAmount">Amount: </p>
+            <p id="slipCurrency">Currency: </p>
+            <img id="receiverLogoPreview" src="" alt="Receiver Logo" style="display:none; width: 80px;">
+        </div>
+        <a href="#" id="downloadLink" class="btn">Download as Image</a>
+    </div>
+</div>
+
+<script>
+    function generateSlip() {
+        const name = document.getElementById('name').value;
+        const bank = document.getElementById('bank').value;
+        const amount = document.getElementById('amount').value;
+        const currency = document.getElementById('currency').value;
+        const logo = document.getElementById('logo').files[0];
+
+        if (name && bank && amount && currency) {
+            // Update preview
+            document.getElementById('slipName').textContent = 'Name: ' + name;
+            document.getElementById('slipBank').textContent = 'Receiver\'s Bank: ' + bank;
+            document.getElementById('slipAmount').textContent = 'Amount: ' + amount;
+            document.getElementById('slipCurrency').textContent = 'Currency: ' + currency;
+
+            // Handle receiver's logo upload
+            if (logo) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    document.getElementById('receiverLogoPreview').style.display = 'inline-block';
+                    document.getElementById('receiverLogoPreview').src = e.target.result;
+                };
+                reader.readAsDataURL(logo);
+            } else {
+                document.getElementById('receiverLogoPreview').style.display = 'none';
+            }
+
+            // Enable download link
+            document.getElementById('downloadLink').style.display = 'inline-block';
+
+            // Generate image (stylized download)
+            document.getElementById('downloadLink').onclick = function () {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                canvas.width = 600;
+                canvas.height = 400;
+                ctx.fillStyle = '#fff';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                // Stylized content
+                ctx.fillStyle = '#000';
+                ctx.font = '20px Arial';
+                ctx.fontWeight = 'bold'; // Make the text bold
+                ctx.fillText('MPB (Sender)', 50, 50);  // MPB as the sender text
+                ctx.fillText('Name: ' + name, 50, 100);
+                ctx.fillText('Receiver\'s Bank: ' + bank, 50, 150);
+                ctx.fillText('Amount: ' + amount, 50, 200);
+                ctx.fillText('Currency: ' + currency, 50, 250);
+
+                if (document.getElementById('receiverLogoPreview').style.display !== 'none') {
+                    const receiverImg = new Image();
+                    receiverImg.src = document.getElementById('receiverLogoPreview').src;
+                    receiverImg.onload = function () {
+                        ctx.drawImage(receiverImg, 400, 230, 80, 80); // Resize to make it smaller
+                        const imgUrl = canvas.toDataURL('image/png');
+                        const link = document.createElement('a');
+                        link.href = imgUrl;
+                        link.download = 'payment-slip.png';
+                        link.click();
+                    };
+                }
+            };
+        } else {
+            alert('Please fill all fields!');
+        }
+    }
+</script>
+
+</body>
+</html>
